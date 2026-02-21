@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>你演我猜 - 專業聚會版</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
+        
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            touch-action: manipulation;
+            background: #0f172a;
+            overflow: hidden;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        /* 漸層背景定義 */
+        .bg-anime { background: linear-gradient(135deg, #f43f5e, #fb923c); }
+        .bg-tech { background: linear-gradient(135deg, #3b82f6, #2dd4bf); }
+        .bg-life { background: linear-gradient(135deg, #8b5cf6, #ec4899); }
+        .bg-nature { background: linear-gradient(135deg, #10b981, #3b82f6); }
+        .bg-world { background: linear-gradient(135deg, #6366f1, #a855f7); }
+
+        /* 滑順進場動畫 */
+        .screen-enter { 
+            animation: fadeInBlur 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; 
+        }
+        @keyframes fadeInBlur {
+            from { opacity: 0; transform: scale(1.05); filter: blur(10px); }
+            to { opacity: 1; transform: scale(1); filter: blur(0); }
+        }
+
+        /* 列表項目交錯進場 */
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .stagger-item { animation: slideUp 0.4s ease-out forwards; opacity: 0; }
+
+        /* 題目彈出動畫 */
+        .word-bounce { 
+            animation: wordPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); 
+        }
+        @keyframes wordPop {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* 分數增加跳動 */
+        .score-pop { animation: scorePop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        @keyframes scorePop {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+        }
+
+        /* 閃爍效果 */
+        .correct-flash { animation: flashGreen 0.4s ease-out; }
+        .pass-flash { animation: flashRed 0.4s ease-out; }
+        @keyframes flashGreen { 0%, 100% { background-color: #0f172a; } 50% { background-color: #065f46; } }
+        @keyframes flashRed { 0%, 100% { background-color: #0f172a; } 50% { background-color: #991b1b; } }
+
+        /* 隱藏捲軸 */
+        .custom-scrollbar::-webkit-scrollbar { display: none; }
+        
+        /* 側邊感應區增強 */
+        .tap-zone {
+            position: fixed; top: 0; bottom: 0; width: 35vw; z-index: 50;
+            display: none; align-items: center; justify-content: center;
+            opacity: 0; transition: all 0.2s; cursor: pointer;
+        }
+        .tap-zone:active { opacity: 0.6; transform: scaleX(1.1); }
+        .tap-zone-left { left: 0; background: linear-gradient(to right, rgba(239, 68, 68, 0.4), transparent); }
+        .tap-zone-right { right: 0; background: linear-gradient(to left, rgba(34, 197, 94, 0.4), transparent); }
+        
+        .hint-text { writing-mode: vertical-lr; text-orientation: mixed; pointer-events: none; }
+        .filter-btn.active { background: white; color: #0f172a; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(255,255,255,0.2); }
+
+        .btn-press:active { transform: scale(0.95); transition: transform 0.1s; }
+
+        .version-tag {
+            position: absolute;
+            bottom: 1.5rem;
+            right: 2rem;
+            font-size: 10px;
+            font-weight: 900;
+            color: rgba(255, 255, 255, 0.2);
+            letter-spacing: 0.1em;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body class="text-white min-h-screen flex flex-col items-center justify-center p-4">
+
+    <!-- 側邊操作感應區 -->
+    <div id="tap-left" onclick="handleAction(false)" class="tap-zone tap-zone-left">
+        <span class="hint-text font-black text-2xl tracking-[1em] opacity-30 text-red-100">PASS 跳過</span>
+    </div>
+    <div id="tap-right" onclick="handleAction(true)" class="tap-zone tap-zone-right">
+        <span class="hint-text font-black text-2xl tracking-[1em] opacity-30 text-green-100">NEXT 正確</span>
+    </div>
+
+    <div id="app" class="w-full max-w-2xl bg-slate-800/60 backdrop-blur-3xl rounded-[3rem] shadow-2xl overflow-hidden border border-white/10 relative z-10 transition-all duration-500">
+        
+        <!-- 1. 菜單畫面 -->
+        <div id="menu-screen" class="p-6 md:p-10 space-y-6 screen-enter pb-14">
+            <div class="text-center py-4">
+                <h1 class="text-5xl md:text-6xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-b from-white to-slate-500">你演我猜</h1>
+                <p class="text-slate-500 font-bold tracking-widest text-[10px] uppercase mt-2">Ultimate Party Experience</p>
+            </div>
+
+            <!-- 分類過濾 -->
+            <div class="flex gap-2 overflow-x-auto custom-scrollbar pb-2" id="filter-bar">
+                <button onclick="filterCategories('all')" class="filter-btn active whitespace-nowrap px-6 py-2.5 rounded-full text-sm font-black border border-white/10 transition-all">全部</button>
+                <button onclick="filterCategories('地理')" class="filter-btn whitespace-nowrap px-6 py-2.5 rounded-full text-sm font-black border border-white/10 transition-all">地理/國家</button>
+                <button onclick="filterCategories('影視')" class="filter-btn whitespace-nowrap px-6 py-2.5 rounded-full text-sm font-black border border-white/10 transition-all">影視娛樂</button>
+                <button onclick="filterCategories('生活')" class="filter-btn whitespace-nowrap px-6 py-2.5 rounded-full text-sm font-black border border-white/10 transition-all">日常生活</button>
+                <button onclick="filterCategories('硬核')" class="filter-btn whitespace-nowrap px-6 py-2.5 rounded-full text-sm font-black border border-white/10 transition-all">挑戰題目</button>
+            </div>
+
+            <!-- 類別卡片列表 -->
+            <div class="grid grid-cols-2 gap-4 max-h-[40vh] overflow-y-auto pr-2 custom-scrollbar" id="category-list"></div>
+
+            <!-- 設置區 -->
+            <div class="pt-6 border-t border-white/5">
+                <div class="flex justify-between items-center mb-4">
+                    <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest">倒數時間設定</label>
+                    <span id="time-label" class="bg-indigo-500/20 text-indigo-400 px-3 py-1 rounded-full font-black text-sm">60s</span>
+                </div>
+                <input type="range" id="time-slider" min="30" max="180" step="30" value="60" 
+                    class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-400">
+            </div>
+            
+            <div class="version-tag">V1.0.1</div>
+        </div>
+
+        <!-- 2. 準備畫面 -->
+        <div id="ready-screen" class="hidden p-8 text-center flex flex-col items-center justify-center min-h-[450px] screen-enter">
+            <h2 class="text-2xl font-black mb-4 text-indigo-400 tracking-[0.3em] uppercase" id="ready-category">類別</h2>
+            <div id="countdown-number" class="text-[12rem] font-black text-white drop-shadow-2xl">3</div>
+            <p class="mt-4 text-slate-400 font-bold animate-pulse text-lg">READY...</p>
+        </div>
+
+        <!-- 3. 遊戲畫面 -->
+        <div id="game-screen" class="hidden flex flex-col min-h-[500px] screen-enter relative">
+            <div class="p-8 flex justify-between items-center shrink-0">
+                <div class="flex items-center gap-3 bg-white/5 p-2 pr-6 rounded-full border border-white/5 backdrop-blur-md">
+                    <div class="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center font-black text-slate-900 shadow-lg text-xl" id="current-score">0</div>
+                    <span class="text-[12px] font-black text-slate-300 uppercase tracking-widest">Score</span>
+                </div>
+                <div id="game-timer" class="text-4xl font-mono font-black text-white px-6 py-2.5 rounded-2xl bg-slate-900/80 border border-white/10 shadow-inner">60</div>
+            </div>
+
+            <div class="flex-grow flex items-center justify-center pointer-events-none px-6">
+                <div id="word-display" class="text-6xl md:text-8xl font-black text-center word-bounce drop-shadow-2xl">載入中</div>
+            </div>
+
+            <!-- 底部退出 -->
+            <div class="p-10 flex justify-center">
+                <button onclick="confirmExit(event)" class="bg-slate-700/40 hover:bg-red-500/20 px-12 py-4 rounded-full text-[12px] font-black text-slate-400 hover:text-red-300 uppercase tracking-[0.3em] transition-all border border-white/5 btn-press">
+                    結束本次遊戲
+                </button>
+            </div>
+        </div>
+
+        <!-- 4. 結果畫面 -->
+        <div id="result-screen" class="hidden p-8 md:p-10 screen-enter pb-16">
+            <div class="text-center mb-8">
+                <p class="text-slate-500 font-black uppercase tracking-[0.4em] text-sm">最後得分</p>
+                <div class="text-[8rem] font-black text-white leading-none my-2 drop-shadow-lg" id="final-score">0</div>
+                <p id="result-comment" class="text-indigo-400 font-bold text-xl">表現優異！</p>
+            </div>
+            
+            <div class="bg-black/20 rounded-[2rem] p-6 max-h-48 overflow-y-auto mb-8 custom-scrollbar border border-white/5">
+                <ul id="review-list" class="space-y-3"></ul>
+            </div>
+            
+            <button onclick="showMenu()" class="w-full bg-white text-slate-900 py-6 rounded-3xl font-black text-xl hover:bg-indigo-50 transition-colors shadow-2xl active:scale-[0.98] btn-press">
+                回主選單
+            </button>
+            
+            <div class="version-tag">V1.0.1</div>
+        </div>
+    </div>
+
+    <!-- 確認 Modal -->
+    <div id="confirm-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-xl hidden flex items-center justify-center p-6 z-[1000] screen-enter">
+        <div class="bg-slate-900 border border-white/10 rounded-[3rem] p-10 max-w-sm w-full text-center shadow-2xl">
+            <h3 class="text-2xl font-black mb-8">確定要提早結束嗎？</h3>
+            <div class="flex flex-col gap-4">
+                <button onclick="endGame(true)" class="bg-red-500 py-5 rounded-2xl font-black text-white active:scale-95 transition shadow-lg btn-press">確認結束</button>
+                <button onclick="closeModal()" class="bg-slate-800 py-5 rounded-2xl font-black text-slate-400 active:scale-95 transition btn-press">繼續挑戰</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 題庫資料 (延用並保持各類 70 題)
+        const categoryData = [
+            { id: "countries", name: "國家地區", type: "地理", bg: "bg-world", words: ["台灣", "日本", "韓國", "泰國", "美國", "英國", "法國", "德國", "義大利", "澳洲", "加拿大", "巴西", "阿根廷", "埃及", "南非", "俄羅斯", "瑞士", "荷蘭", "西班牙", "希臘", "土耳其", "越南", "馬來西亞", "新加坡", "印度", "紐西蘭", "墨西哥", "智利", "秘魯", "挪威", "瑞典", "丹麥", "芬蘭", "冰島", "奧地利", "比利時", "捷克", "波蘭", "匈牙利", "葡萄牙", "沙烏地阿拉伯", "伊朗", "以色列", "阿拉伯聯合大公國", "菲律賓", "印尼", "柬埔寨", "緬甸", "寮國", "蒙古", "摩洛哥", "肯亞", "古巴", "牙買加", "巴拿馬", "烏克蘭", "愛爾蘭", "馬爾地夫", "尼泊爾", "不丹", "卡達", "克羅埃西亞", "羅馬尼亞", "摩納哥", "斯里蘭卡", "馬達加斯加", "突尼西亞", "索馬利亞", "烏拉圭", "厄瓜多"] },
+            { id: "cities", name: "世界城市", type: "地理", bg: "bg-nature", words: ["台北", "東京", "大阪", "首爾", "曼谷", "紐約", "倫敦", "巴黎", "柏林", "羅馬", "雪梨", "洛杉磯", "舊金山", "芝加哥", "多倫多", "溫哥華", "里約熱內盧", "開羅", "伊斯坦堡", "莫斯科", "香港", "澳門", "上海", "北京", "新加坡市", "吉隆坡", "河內", "胡志明市", "馬尼拉", "雅加達", "新德里", "孟買", "迪拜", "阿布達比", "耶路撒冷", "阿姆斯特丹", "布魯塞爾", "維也納", "蘇黎世", "日內瓦", "馬德里", "巴塞隆納", "里斯本", "布拉格", "布達佩斯", "華沙", "哥本哈根", "斯德哥爾摩", "奧斯陸", "赫爾辛基", "威尼斯", "佛羅倫斯", "米蘭", "那不勒斯", "雅典", "開普敦", "內羅畢", "墨西哥城", "布宜諾斯艾利斯", "利馬", "奧克蘭", "墨爾本", "孟菲斯", "西雅圖", "蒙特婁", "聖保羅", "聖地牙哥", "波哥大", "卡薩布蘭卡", "蒙地卡羅"] },
+            { id: "anime", name: "動漫神作", type: "影視", bg: "bg-anime", words: ["航海王", "火影忍者", "名偵探柯南", "進擊的巨人", "鬼滅之刃", "咒術迴戰", "間諜家家酒", "蠟筆小新", "多啦A夢", "櫻桃小丸子", "七龍珠", "排球少年", "灌籃高手", "葬送的芙莉蓮", "我的英雄學院", "鏈願人", "黑執事", "美少女戰士", "新世紀福音戰士", "神隱少女", "天空之城", "龍貓", "一拳超人", "JoJo的奇妙冒險", "獵人", "鋼之鍊金術師", "死神", "銀魂", "幽遊白書", "棋靈王", "黑子的籃球", "家庭教師", "藍色監獄", "孤獨搖滾", "推的孩子", "魔法少女小圓", "罪惡王冠", "刀劍神域", "命運石之門", "夏目友人帳", "暗殺教室", "食戟之靈", "偽戀", "四月是你的謊言", "在下坂本有何貴幹", "齊木楠雄的災難", "路人超能100", "極道主夫", "轉生史萊姆", "Re:從零開始", "為美好的世界獻上祝福", "無職轉生", "哥布林殺手", "OVERLORD", "迷宮飯", "藥師少女的獨語", "肌肉魔法使", "輝夜姬想讓人告白", "工作細胞", "鑽石王牌", "青之蘆葦", "弱角友崎同學", "更衣人偶墜入愛河", "古見同學", "徹夜之歌", "香格里拉", "葬送的芙莉蓮", "魔王城說晚安", "海賊王", "死神", "通靈王"] },
+            { id: "movie", name: "經典電影", type: "影視", bg: "bg-anime", words: ["鐵達尼號", "阿凡達", "哈利波特", "復仇者聯盟", "玩命關頭", "獅子王", "冰雪奇緣", "小丑", "奧本海默", "芭比", "捍衛戰士", "寄生上流", "教父", "侏羅紀公園", "星際大戰", "神鬼奇航", "不可能的任務", "駭客任務", "蜘蛛人", "蝙蝠俠", "超人", "神力女超人", "魔戒", "哈比人", "飢餓遊戲", "暮光之城", "變形金剛", "金剛", "哥吉拉", "死侍", "星際效應", "全面啟動", "天能", "敦克爾克", "隔離島", "華爾街之狼", "大亨小傳", "斷背山", "少年Pi", "臥虎藏龍", "不能說的秘密", "那些年", "我的少女時代", "當男人戀愛時", "海角七號", "賽德克巴萊", "返校", "緝魂", "你的名字", "天氣之子", "鈴芽之旅", "聲之形", "龍與雀斑公主", "黑鐵的魚影", "灌籃高手電影版", "蒼鷺與少年", "崖上的波妞", "腦筋急轉彎", "玩具總動員", "超人特攻隊", "怪獸電力公司", "海底總動員", "料理鼠王", "天外奇蹟", "靈魂急轉彎", "青春養成記", "元素方城市", "末代皇帝", "重慶森林", "千與千尋"] },
+            { id: "tech", name: "品牌科技", type: "生活", bg: "bg-tech", words: ["蘋果 Apple", "Google", "特斯拉", "星巴克", "麥當勞", "Netflix", "Facebook", "Instagram", "TikTok", "任天堂", "PlayStation", "微軟", "亞馬遜", "蝦皮購物", "Uber Eats", "台積電", "ChatGPT", "輝達 NVIDIA", "YouTube", "迪士尼", "三星", "索尼 Sony", "華碩 ASUS", "宏碁 Acer", "捷安特", "星宇航空", "長榮航空", "中華航空", "鼎泰豐", "全聯", "家樂福", "好市多", "IKEA", "無印良品", "優衣庫", "Zara", "H&M", "Nike", "Adidas", "Puma", "New Balance", "勞力士", "香奈兒", "路易威登", "愛馬仕", "古馳", "迪奧", "普拉達", "賓士", "寶馬 BMW", "奧迪", "保時捷", "法拉利", "藍寶堅尼", "豐田", "本田", "福特", "賓利", "可口可樂", "百事可樂", "Red Bull", "Visa", "Mastercard", "LINE", "WeChat", "Spotify", "Disney+", "Grab", "Foodpanda", "OpenAI"] },
+            { id: "food", name: "好吃好喝", type: "生活", bg: "bg-life", words: ["珍珠奶茶", "臭豆腐", "大腸包小腸", "蚵仔煎", "地瓜球", "蚵仔麵線", "鹽酥雞", "木瓜牛奶", "章魚小丸子", "糖葫蘆", "滷味", "雞排", "胡椒餅", "東山鴨頭", "烤玉米", "刈包", "潤餅", "甜不辣", "燒仙草", "豆花", "牛肉麵", "滷肉飯", "小籠包", "雞肉飯", "肉圓", "碗粿", "米糕", "豬血湯", "貢丸湯", "藥燉排骨", "當歸鴨", "麻油雞", "薑母鴨", "羊肉爐", "火鍋", "壽喜燒", "拉麵", "壽司", "生魚片", "天婦羅", "韓式炸雞", "石鍋拌飯", "部隊鍋", "泰式檸檬魚", "月亮蝦餅", "打拋豬", "越式河粉", "義大利麵", "披薩", "漢堡", "三明治", "蛋捲冰淇淋", "提拉米蘇", "馬卡龍", "可麗露", "甜甜圈", "鬆餅", "起司蛋糕", "布朗尼", "雞蛋仔", "檸檬塔", "鳳梨酥", "太陽餅", "牛軋糖", "麻糬", "紅豆餅", "刨冰", "芒果冰", "雪花冰", "楊枝甘露", "馬祖漢堡", "胡椒餅", "炸鮮奶", "拔絲地瓜"] },
+            { id: "idioms", name: "成語大師", type: "硬核", bg: "bg-life", words: ["守株待兔", "畫蛇添足", "盲人摸象", "對牛彈琴", "掩耳盜鈴", "拔苗助長", "一箭雙鵰", "井底之蛙", "亡羊補牢", "狐假虎威", "順手牽羊", "雞飛狗跳", "如魚得水", "驚弓之鳥", "走馬看花", "聞雞起舞", "懸樑刺股", "胸有成竹", "名落孫山", "草木皆兵", "破釜沉舟", "背水一戰", "臥薪嘗膽", "完璧歸趙", "負荊請罪", "紙上談兵", "指鹿為馬", "四面楚歌", "投筆從戎", "三顧茅廬", "草船借箭", "樂不思蜀", "如履薄冰", "如虎添翼", "如日中天", "如出一轍", "如影隨形", "如坐針氈", "如獲至寶", "如數家珍", "名副其實", "名不虛傳", "名正言順", "名噪一時", "名列前茅", "一鳴驚人", "一敗塗地", "一帆風順", "一絲不掛", "一目了然", "一心一意", "三心二意", "五體投地", "七上八下", "九牛一毛", "十拿九穩", "千鈞一髮", "萬紫千紅", "半途而廢", "全神貫注", "大刀闊斧", "大公無私", "大材小用", "小題大作", "多才多藝", "少見多怪", "天長地久", "地動山搖", "山盟海誓", "海枯石爛"] },
+            { id: "actions", name: "爆笑動作", type: "生活", bg: "bg-tech", words: ["跳舞洗澡", "公車放屁", "遇到前任假裝沒看見", "用腳開門", "擠痘痘", "挖鼻孔", "喝酸檸檬汁", "踩到大便", "忘記帶錢包", "圖書館噴嚏", "被鬼嚇到", "健身房裝酷", "化妝畫壞", "睡覺流口水", "試圖飛起來", "假裝是樹", "雨中跌倒", "猩猩求偶", "電梯偷放屁", "忘記老師名字", "超模走秀", "抓自己尾巴", "螃蟹走路", "酒醉芭蕾", "超市試吃", "秘密特工", "跟電線桿說話", "吞下拳頭", "機器人沒電", "原地游泳", "台上忘詞", "穿錯鞋出門", "公眾自拍", "吹不出噴口哨", "企鵝走路", "跑步機跌倒", "搖滾明星", "舔自己耳朵", "醉貓", "活雕像", "夢中打拳", "抓蒼蠅", "模仿蛇", "母雞下蛋", "圖書館街舞", "吸血鬼", "鼻子喝水", "超人起飛失敗", "大猩猩", "浴室高歌", "模仿嬰兒", "噴火龍", "嘴接爆米花", "鴕鳥躲藏", "路人肩睡覺", "恐龍吼叫", "李小龍", "不用手穿衣", "貓頭鷹", "鋼管舞", "瘋狂科學家", "海豹拍手", "冰上走路", "大力士", "慢動作跑步", "外星人", "腳畫圖", "殭屍跳", "隱形人", "鴿子圍攻"] }
+        ];
+
+        let gameState = {
+            currentWords: [],
+            score: 0,
+            timeLeft: 60,
+            timer: null,
+            history: [],
+            isPaused: false,
+            audioCtx: null
+        };
+
+        // 簡易音效
+        function playSound(freq, duration, type = 'sine') {
+            try {
+                if (!gameState.audioCtx) gameState.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = gameState.audioCtx.createOscillator();
+                const gain = gameState.audioCtx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, gameState.audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.1, gameState.audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, gameState.audioCtx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(gameState.audioCtx.destination);
+                osc.start();
+                osc.stop(gameState.audioCtx.currentTime + duration);
+            } catch(e) {}
+        }
+
+        function initMenu() {
+            renderList('all');
+            const slider = document.getElementById('time-slider');
+            const label = document.getElementById('time-label');
+            slider.oninput = () => label.innerText = slider.value + 's';
+        }
+
+        function filterCategories(type) {
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if(btn.innerText.includes(type) || (type === 'all' && btn.innerText === '全部')) btn.classList.add('active');
+            });
+            renderList(type);
+        }
+
+        function renderList(type) {
+            const list = document.getElementById('category-list');
+            list.innerHTML = '';
+            const filtered = type === 'all' ? categoryData : categoryData.filter(item => item.type === type);
+            
+            filtered.forEach((cat, index) => {
+                const btn = document.createElement('div');
+                btn.className = `${cat.bg} p-6 rounded-[2rem] cursor-pointer hover:scale-[1.03] transition-all active:scale-95 shadow-xl border-b-4 border-black/20 stagger-item`;
+                btn.style.animationDelay = `${index * 0.05}s`;
+                btn.innerHTML = `
+                    <div class="font-black text-xl mb-1">${cat.name}</div>
+                    <div class="text-[10px] opacity-80 font-black uppercase tracking-widest">${cat.type} | ${cat.words.length} 題庫</div>
+                `;
+                btn.onclick = () => prepareGame(cat);
+                list.appendChild(btn);
+            });
+        }
+
+        function prepareGame(cat) {
+            gameState.score = 0;
+            gameState.history = [];
+            gameState.timeLeft = parseInt(document.getElementById('time-slider').value);
+            gameState.currentWords = [...cat.words].sort(() => Math.random() - 0.5);
+            document.getElementById('ready-category').innerText = cat.name;
+            switchScreen('ready');
+            
+            let count = 3;
+            const countEl = document.getElementById('countdown-number');
+            countEl.innerText = count;
+            
+            const cd = setInterval(() => {
+                count--;
+                if(count > 0) {
+                    countEl.innerText = count;
+                    playSound(440, 0.1, 'square');
+                    countEl.style.animation = 'none';
+                    void countEl.offsetWidth;
+                    countEl.style.animation = 'wordPop 0.5s ease-out';
+                } else { 
+                    clearInterval(cd); 
+                    playSound(880, 0.3, 'sine');
+                    startGame(); 
+                }
+            }, 1000);
+        }
+
+        function startGame() {
+            switchScreen('game');
+            document.getElementById('current-score').innerText = '0';
+            nextWord();
+            gameState.timer = setInterval(() => {
+                if(!gameState.isPaused) {
+                    gameState.timeLeft--;
+                    const timerEl = document.getElementById('game-timer');
+                    timerEl.innerText = gameState.timeLeft;
+                    if(gameState.timeLeft <= 10) timerEl.classList.add('text-red-500', 'animate-pulse');
+                    if(gameState.timeLeft <= 0) endGame();
+                }
+            }, 1000);
+        }
+
+        function nextWord() {
+            const display = document.getElementById('word-display');
+            display.classList.remove('word-bounce');
+            void display.offsetWidth;
+            const word = gameState.currentWords.pop() || "題庫已空!";
+            display.innerText = word;
+            gameState.activeWord = word;
+            display.classList.add('word-bounce');
+        }
+
+        function handleAction(isCorrect) {
+            if(gameState.isPaused || document.getElementById('game-screen').classList.contains('hidden')) return;
+            gameState.history.push({ word: gameState.activeWord, correct: isCorrect });
+            
+            const scoreEl = document.getElementById('current-score');
+            
+            if(isCorrect) {
+                gameState.score++;
+                playSound(1200, 0.2, 'sine');
+                document.body.classList.add('correct-flash');
+                scoreEl.classList.add('score-pop');
+                setTimeout(() => {
+                    document.body.classList.remove('correct-flash');
+                    scoreEl.classList.remove('score-pop');
+                }, 400);
+            } else {
+                playSound(200, 0.2, 'triangle');
+                document.body.classList.add('pass-flash');
+                setTimeout(() => document.body.classList.remove('pass-flash'), 400);
+            }
+            scoreEl.innerText = gameState.score;
+            nextWord();
+        }
+
+        function endGame(forceQuit = false) {
+            clearInterval(gameState.timer);
+            closeModal(); 
+            
+            if (forceQuit) {
+                showMenu();
+            } else {
+                playSound(600, 0.5, 'square');
+                switchScreen('result');
+                document.getElementById('final-score').innerText = gameState.score;
+                
+                const comment = gameState.score > 20 ? "簡直是表演天才！" : gameState.score > 10 ? "非常有默契喔！" : "再接再厲，加油！";
+                document.getElementById('result-comment').innerText = comment;
+
+                document.getElementById('review-list').innerHTML = gameState.history.map((h, i) => `
+                    <li class="flex justify-between items-center p-4 bg-white/5 rounded-2xl border border-white/5 stagger-item" style="animation-delay: ${i * 0.05}s">
+                        <span class="${h.correct ? 'text-white' : 'text-slate-500'} font-black text-lg">${h.word}</span>
+                        <span class="text-xl">${h.correct ? '✅' : '❌'}</span>
+                    </li>
+                `).join('');
+            }
+        }
+
+        function switchScreen(s) {
+            ['menu', 'ready', 'game', 'result'].forEach(id => {
+                const el = document.getElementById(id+'-screen');
+                el.classList.add('hidden');
+                el.classList.remove('screen-enter');
+            });
+            const active = document.getElementById(s+'-screen');
+            active.classList.remove('hidden');
+            void active.offsetWidth;
+            active.classList.add('screen-enter');
+
+            document.getElementById('tap-left').style.display = s === 'game' ? 'flex' : 'none';
+            document.getElementById('tap-right').style.display = s === 'game' ? 'flex' : 'none';
+            
+            if(s === 'menu') {
+                document.getElementById('game-timer').classList.remove('text-red-500', 'animate-pulse');
+            }
+        }
+
+        function confirmExit(e) { 
+            if(e) e.stopPropagation();
+            gameState.isPaused = true; 
+            const modal = document.getElementById('confirm-modal');
+            modal.classList.remove('hidden');
+        }
+        function closeModal() { 
+            gameState.isPaused = false; 
+            document.getElementById('confirm-modal').classList.add('hidden'); 
+        }
+        function showMenu() { switchScreen('menu'); }
+
+        window.onload = initMenu;
+    </script>
+</body>
+</html>
