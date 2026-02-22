@@ -1,124 +1,371 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>手機傾斜偵測測試</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>你演我猜 - 專業聚會極致版</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
+        
         body {
-            font-family: sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            margin: 0;
-            background-color: #f0f2f5;
-        }
-        #container {
-            background: white;
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            text-align: center;
-            width: 80%;
-        }
-        /* 視覺化小球 */
-        #ball-track {
-            width: 200px;
-            height: 200px;
-            border: 2px solid #333;
-            border-radius: 50%;
-            margin: 20px auto;
-            position: relative;
-            background: #eee;
-        }
-        #ball {
-            width: 30px;
-            height: 30px;
-            background: #007AFF;
-            border-radius: 50%;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            transition: 0.1s ease-out;
-        }
-        button {
-            padding: 12px 24px;
-            font-size: 16px;
-            background-color: #007AFF;
+            font-family: 'Noto Sans TC', sans-serif;
+            touch-action: manipulation;
+            background: #020617; 
+            overflow: hidden;
+            -webkit-user-select: none;
+            user-select: none;
             color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
         }
-        .data {
-            margin-top: 15px;
-            font-family: monospace;
-            font-size: 1.2rem;
+
+        /* Gradient Themes */
+        .bg-anime { background: linear-gradient(135deg, #f43f5e, #fb923c); }
+        .bg-tech { background: linear-gradient(135deg, #3b82f6, #2dd4bf); }
+        .bg-life { background: linear-gradient(135deg, #8b5cf6, #ec4899); }
+        .bg-nature { background: linear-gradient(135deg, #10b981, #3b82f6); }
+        .bg-world { background: linear-gradient(135deg, #6366f1, #a855f7); }
+        .bg-celebs { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .bg-school { background: linear-gradient(135deg, #0ea5e9, #6366f1); }
+        .bg-home { background: linear-gradient(135deg, #f97316, #e11d48); }
+        .bg-music { background: linear-gradient(135deg, #ec4899, #8b5cf6); }
+        .bg-lyrics { background: linear-gradient(135deg, #34d399, #3b82f6); }
+        .bg-2000s { background: linear-gradient(135deg, #0ea5e9, #2563eb); }
+        .bg-history { background: linear-gradient(135deg, #475569, #1e293b); }
+        .bg-events2025 { background: linear-gradient(135deg, #ef4444, #f97316); }
+
+        /* Animations */
+        .intro-logo { animation: introLogoFade 1.8s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+        @keyframes introLogoFade {
+            0% { opacity: 0; transform: scale(0.85); filter: blur(20px); }
+            40% { opacity: 1; transform: scale(1.05); filter: blur(0px); }
+            100% { opacity: 1; transform: scale(1); filter: blur(0px); }
+        }
+
+        .screen-enter { animation: fadeInBlur 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+        @keyframes fadeInBlur {
+            from { opacity: 0; transform: scale(1.02); filter: blur(10px); }
+            to { opacity: 1; transform: scale(1); filter: blur(0); }
+        }
+
+        .stagger-item { opacity: 0; }
+        .stagger-active .stagger-item { animation: slideUpFade 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+        @keyframes slideUpFade {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .word-bounce { animation: wordPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        @keyframes wordPop {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .score-pop { animation: scorePop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        @keyframes scorePop { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.3); } }
+
+        .correct-flash { animation: flashGreen 0.4s ease-out; }
+        .pass-flash { animation: flashRed 0.4s ease-out; }
+        @keyframes flashGreen { 0%, 100% { background-color: #0f172a; } 50% { background-color: #065f46; } }
+        @keyframes flashRed { 0%, 100% { background-color: #0f172a; } 50% { background-color: #991b1b; } }
+
+        .custom-scrollbar::-webkit-scrollbar { display: none; }
+        
+        .tap-zone {
+            position: fixed; top: 0; bottom: 0; width: 35vw; z-index: 50;
+            display: none; align-items: center; justify-content: center;
+            opacity: 0; transition: all 0.2s; cursor: pointer;
+        }
+        .tap-zone:active { opacity: 0.6; transform: scaleX(1.1); }
+        .tap-zone-left { left: 0; background: linear-gradient(to right, rgba(239, 68, 68, 0.4), transparent); }
+        .tap-zone-right { right: 0; background: linear-gradient(to left, rgba(34, 197, 94, 0.4), transparent); }
+        
+        .hint-text { writing-mode: vertical-lr; text-orientation: mixed; pointer-events: none; }
+        .btn-press:active { transform: scale(0.95); transition: transform 0.1s; }
+
+        .version-tag {
+            position: absolute; bottom: 1rem; right: 1.5rem;
+            font-size: 10px; font-weight: 900; color: rgba(255, 255, 255, 0.1);
+            letter-spacing: 0.1em; pointer-events: none;
         }
     </style>
 </head>
-<body>
+<body class="min-h-screen flex flex-col items-center justify-center p-4">
 
-<div id="container">
-    <h2>傾斜偵測</h2>
-    <p>請點擊下方按鈕啟動感測器</p>
-    
-    <button id="askButton">啟動感測器</button>
-
-    <div id="ball-track">
-        <div id="ball"></div>
+    <!-- Gameplay Interaction Zones -->
+    <div id="tap-left" onclick="handleAction(false)" class="tap-zone tap-zone-left">
+        <span class="hint-text font-black text-2xl tracking-[1em] opacity-30 text-red-100">PASS 跳過</span>
+    </div>
+    <div id="tap-right" onclick="handleAction(true)" class="tap-zone tap-zone-right">
+        <span class="hint-text font-black text-2xl tracking-[1em] opacity-30 text-green-100">NEXT 正確</span>
     </div>
 
-    <div class="data">
-        <div>Beta (前後): <span id="beta">0</span>°</div>
-        <div>Gamma (左右): <span id="gamma">0</span>°</div>
+    <!-- Main Container -->
+    <div id="app" class="w-full max-w-2xl bg-slate-900/80 backdrop-blur-3xl rounded-[3rem] shadow-2xl overflow-hidden border border-white/10 relative z-10" style="perspective: 1000px;">
+        
+        <!-- 1. Menu Screen -->
+        <div id="menu-screen" class="p-6 md:p-10 space-y-6 screen-enter pb-14 stagger-active">
+            <div class="text-center py-4 intro-logo">
+                <h1 class="text-5xl md:text-6xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-b from-white to-slate-500">你演我猜</h1>
+                <p class="text-slate-500 font-bold tracking-widest text-[10px] uppercase mt-2">Ultimate Party Experience</p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 max-h-[45vh] overflow-y-auto pr-2 custom-scrollbar" id="category-list"></div>
+
+            <div class="pt-6 border-t border-white/5 stagger-item" style="animation-delay: 0.5s;">
+                <div class="flex justify-between items-center mb-4">
+                    <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest">時間設定</label>
+                    <span id="time-label" class="bg-indigo-500/20 text-indigo-400 px-3 py-1 rounded-full font-black text-sm">60s</span>
+                </div>
+                <input type="range" id="time-slider" min="30" max="180" step="30" value="60" 
+                    class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-400">
+            </div>
+            
+            <div class="version-tag">STABLE BUILD | V2.0.1</div>
+        </div>
+
+        <!-- 2. Ready Screen -->
+        <div id="ready-screen" class="hidden p-8 text-center flex flex-col items-center justify-center min-h-[450px] screen-enter">
+            <h2 class="text-2xl font-black mb-4 text-indigo-400 tracking-[0.3em] uppercase" id="ready-category">類別</h2>
+            <div id="countdown-number" class="text-[12rem] font-black text-white drop-shadow-2xl">3</div>
+            <p class="mt-4 text-slate-400 font-bold animate-pulse text-lg">READY...</p>
+        </div>
+
+        <!-- 3. Game Screen -->
+        <div id="game-screen" class="hidden flex flex-col min-h-[500px] screen-enter relative">
+            <div class="p-8 flex justify-between items-center shrink-0">
+                <div class="flex items-center gap-3 bg-white/5 p-2 pr-6 rounded-full border border-white/5 backdrop-blur-md">
+                    <div class="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center font-black text-slate-900 shadow-lg text-xl" id="current-score">0</div>
+                    <span class="text-[12px] font-black text-slate-300 uppercase tracking-widest">Score</span>
+                </div>
+                <div id="game-timer" class="text-4xl font-mono font-black text-white px-6 py-2.5 rounded-2xl bg-slate-900/80 border border-white/10 shadow-inner">60</div>
+            </div>
+
+            <div class="flex-grow flex items-center justify-center pointer-events-none px-6">
+                <div id="word-display" class="text-4xl md:text-6xl font-black text-center word-bounce drop-shadow-2xl px-4">載入中</div>
+            </div>
+
+            <div class="p-10 flex justify-center">
+                <button onclick="confirmExit(event)" class="bg-slate-700/40 hover:bg-red-500/20 px-12 py-4 rounded-full text-[12px] font-black text-slate-400 hover:text-red-300 uppercase tracking-[0.3em] transition-all border border-white/5 btn-press">
+                    結束本次遊戲
+                </button>
+            </div>
+        </div>
+
+        <!-- 4. Result Screen -->
+        <div id="result-screen" class="hidden p-8 md:p-10 screen-enter pb-16">
+            <div class="text-center mb-8">
+                <p class="text-slate-500 font-black uppercase tracking-[0.4em] text-sm">最後得分</p>
+                <div class="text-[8rem] font-black text-white leading-none my-2 drop-shadow-lg" id="final-score">0</div>
+                <p id="result-comment" class="text-indigo-400 font-bold text-xl">表現優異！</p>
+            </div>
+            
+            <div class="bg-black/20 rounded-[2rem] p-6 max-h-48 overflow-y-auto mb-8 custom-scrollbar border border-white/5">
+                <ul id="review-list" class="space-y-3"></ul>
+            </div>
+            
+            <button onclick="showMenu()" class="w-full bg-white text-slate-900 py-6 rounded-3xl font-black text-xl hover:bg-indigo-50 transition-colors shadow-2xl active:scale-[0.98] btn-press">
+                回主選單
+            </button>
+        </div>
     </div>
-</div>
 
-<script>
-    const ball = document.getElementById('ball');
-    const betaDisplay = document.getElementById('beta');
-    const gammaDisplay = document.getElementById('gamma');
-    const btn = document.getElementById('askButton');
+    <!-- Exit Confirmation Modal -->
+    <div id="confirm-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-xl hidden flex items-center justify-center p-6 z-[1000]">
+        <div class="bg-slate-900 border border-white/10 rounded-[3rem] p-10 max-w-sm w-full text-center shadow-2xl">
+            <h3 class="text-2xl font-black mb-8">確定要提早結束嗎？</h3>
+            <div class="flex flex-col gap-4">
+                <button onclick="endGame(true)" class="bg-red-500 py-5 rounded-2xl font-black text-white active:scale-95 transition shadow-lg btn-press">確認結束</button>
+                <button onclick="closeModal()" class="bg-slate-800 py-5 rounded-2xl font-black text-slate-400 active:scale-95 transition btn-press">繼續挑戰</button>
+            </div>
+        </div>
+    </div>
 
-    function handleOrientation(event) {
-        // 獲取數值
-        let beta = event.beta;  // -180 到 180 (前後)
-        let gamma = event.gamma; // -90 到 90 (左右)
+    <script>
+        const categoryData = [
+            { 
+                id: "events2025", name: "2025時事", type: "趨勢", bg: "bg-events2025", 
+                words: ["川普就任", "世界壯年運動會", "大阪萬博", "台積電2奈米", "AI機器人", "黃仁勳", "6G技術", "碳費開徵", "大巨蛋演唱會", "星艦試飛", "虛擬偶像", "低軌衛星", "日圓波動", "無人機外送", "台北捷運東延"] 
+            },
+            { 
+                id: "anime", name: "動漫神作", type: "影視", bg: "bg-anime", 
+                words: ["航海王", "進擊的巨人", "鬼滅之刃", "咒術迴戰", "間諜家家酒", "葬送的芙莉蓮", "排球少年", "灌籃高手", "鏈鋸人", "我推的孩子", "藥師少女", "神隱少女", "七龍珠", "獵人", "鋼之鍊金術師"] 
+            },
+            { 
+                id: "tech", name: "科技品牌", type: "生活", bg: "bg-tech", 
+                words: ["Apple", "特斯拉", "ChatGPT", "Netflix", "TikTok", "輝達 NVIDIA", "星巴克", "YouTube", "任天堂", "Uber Eats", "Google", "Instagram", "IKEA", "蝦皮購物", "Spotify"] 
+            },
+            { 
+                id: "food", name: "好吃好喝", type: "美食", bg: "bg-life", 
+                words: ["珍珠奶茶", "臭豆腐", "蚵仔煎", "地瓜球", "鹽酥雞", "小籠包", "牛肉麵", "麻辣火鍋", "芒果冰", "滷肉飯", "鳳梨酥", "提拉米蘇", "壽司", "披薩", "韓式炸雞"] 
+            },
+            { 
+                id: "idioms", name: "成語大師", type: "硬核", bg: "bg-world", 
+                words: ["守株待兔", "畫蛇添足", "盲人摸象", "對牛彈琴", "掩耳盜鈴", "一箭雙鵰", "井底之蛙", "狐假虎威", "順手牽羊", "胸有成竹", "名落孫山", "草木皆兵", "三顧茅廬", "草船借箭", "指鹿為馬"] 
+            },
+            { 
+                id: "actions", name: "爆笑動作", type: "表演", bg: "bg-celebs", 
+                words: ["洗澡跳舞", "踩到大便", "擠痘痘", "挖鼻孔", "喝酸檸檬", "遇到前任", "猩猩求偶", "超模走秀", "用腳開門", "穿太緊的褲子", "機器人", "拉肚子找廁所", "假裝是樹", "雨中跌倒", "模仿公雞"] 
+            },
+            { 
+                id: "2000s", name: "2000s金曲", type: "音樂", bg: "bg-2000s", 
+                words: ["龍捲風", "七里香", "戀人未滿", "Super Star", "倒帶", "天黑黑", "江南", "十年", "勇氣", "分手快樂", "童話", "小幸運", "那些年", "知足", "倔強"] 
+            },
+            { 
+                id: "city", name: "旅遊聖地", type: "地理", bg: "bg-nature", 
+                words: ["台北", "東京", "巴黎", "倫敦", "紐約", "首爾", "曼谷", "雪梨", "羅馬", "威尼斯", "京都", "大阪", "香港", "迪拜", "新加坡"] 
+            }
+        ];
 
-        // 更新文字顯示
-        betaDisplay.textContent = Math.round(beta);
-        gammaDisplay.textContent = Math.round(gamma);
+        let gameState = {
+            currentWords: [], score: 0, timeLeft: 60, timer: null,
+            history: [], isPaused: false, audioCtx: null, activeWord: ""
+        };
 
-        // 移動小球位置 (限制移動範圍在圓圈內)
-        // 為了演示，我們將角度映射到像素位置
-        let x = gamma * 2; // 左右移動
-        let y = beta * 2;  // 前後移動
+        const SFX = {
+            init() { 
+                if (!gameState.audioCtx) {
+                    gameState.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            },
+            play(freq, type = 'sine', duration = 0.1) {
+                this.init();
+                const now = gameState.audioCtx.currentTime;
+                const osc = gameState.audioCtx.createOscillator();
+                const gain = gameState.audioCtx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, now);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + duration);
+                osc.connect(gain);
+                gain.connect(gameState.audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + duration);
+            },
+            tick() { this.play(880, 'triangle', 0.1); },
+            correct() { this.play(523, 'sine', 0.2); setTimeout(()=>this.play(659, 'sine', 0.2), 50); },
+            pass() { this.play(220, 'sawtooth', 0.2); },
+            gameOver() { [392, 523, 659].forEach((f, i) => setTimeout(() => this.play(f, 'sine', 0.5), i * 150)); }
+        };
 
-        ball.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
-    }
-
-    btn.addEventListener('click', function() {
-        // 針對 iOS 13+ 的權限請求處理
-        if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-            DeviceOrientationEvent.requestPermission()
-                .then(permissionState => {
-                    if (permissionState === 'granted') {
-                        window.addEventListener('deviceorientation', handleOrientation);
-                        btn.style.display = 'none'; // 取得權限後隱藏按鈕
-                    }
-                })
-                .catch(console.error);
-        } else {
-            // 一般 Android 或較舊版本瀏覽器
-            window.addEventListener('deviceorientation', handleOrientation);
-            btn.style.display = 'none';
+        function initMenu() {
+            const list = document.getElementById('category-list');
+            categoryData.forEach((cat, idx) => {
+                const card = document.createElement('div');
+                card.className = `${cat.bg} p-6 rounded-[2rem] cursor-pointer hover:scale-[1.03] transition-all active:scale-95 shadow-xl border-b-4 border-black/20 stagger-item`;
+                card.style.animationDelay = `${(idx * 0.05) + 0.3}s`;
+                card.innerHTML = `<div class="font-black text-xl mb-1">${cat.name}</div><div class="text-[10px] opacity-80 font-black tracking-widest uppercase">${cat.type} | ${cat.words.length}題</div>`;
+                card.onclick = () => prepareGame(cat);
+                list.appendChild(card);
+            });
+            
+            const slider = document.getElementById('time-slider');
+            const label = document.getElementById('time-label');
+            slider.oninput = () => label.innerText = slider.value + 's';
         }
-    });
-</script>
 
+        function prepareGame(cat) {
+            gameState.score = 0;
+            gameState.history = [];
+            gameState.timeLeft = parseInt(document.getElementById('time-slider').value);
+            gameState.currentWords = [...cat.words].sort(() => Math.random() - 0.5);
+            document.getElementById('ready-category').innerText = cat.name;
+            switchScreen('ready');
+            
+            let count = 3;
+            const countEl = document.getElementById('countdown-number');
+            countEl.innerText = count;
+            const cd = setInterval(() => {
+                count--;
+                if(count > 0) {
+                    countEl.innerText = count;
+                    SFX.tick();
+                    countEl.style.animation = 'none';
+                    void countEl.offsetWidth;
+                    countEl.style.animation = 'wordPop 0.5s ease-out';
+                } else {
+                    clearInterval(cd);
+                    startGame();
+                }
+            }, 1000);
+        }
+
+        function startGame() {
+            switchScreen('game');
+            document.getElementById('current-score').innerText = '0';
+            nextWord();
+            gameState.timer = setInterval(() => {
+                if(!gameState.isPaused) {
+                    gameState.timeLeft--;
+                    const timerEl = document.getElementById('game-timer');
+                    timerEl.innerText = gameState.timeLeft;
+                    if(gameState.timeLeft <= 10) timerEl.classList.add('text-red-500', 'animate-pulse');
+                    if(gameState.timeLeft <= 0) endGame();
+                }
+            }, 1000);
+        }
+
+        function nextWord() {
+            const display = document.getElementById('word-display');
+            display.classList.remove('word-bounce');
+            void display.offsetWidth;
+            const word = gameState.currentWords.pop() || "題庫已空！";
+            display.innerText = word;
+            gameState.activeWord = word;
+            display.classList.add('word-bounce');
+        }
+
+        function handleAction(isCorrect) {
+            if(gameState.isPaused || document.getElementById('game-screen').classList.contains('hidden')) return;
+            gameState.history.push({ word: gameState.activeWord, correct: isCorrect });
+            if(isCorrect) {
+                gameState.score++;
+                SFX.correct();
+                document.body.classList.add('correct-flash');
+                document.getElementById('current-score').classList.add('score-pop');
+                setTimeout(() => {
+                    document.body.classList.remove('correct-flash');
+                    document.getElementById('current-score').classList.remove('score-pop');
+                }, 400);
+            } else {
+                SFX.pass();
+                document.body.classList.add('pass-flash');
+                setTimeout(() => document.body.classList.remove('pass-flash'), 400);
+            }
+            document.getElementById('current-score').innerText = gameState.score;
+            nextWord();
+        }
+
+        function endGame(forceQuit = false) {
+            clearInterval(gameState.timer);
+            closeModal();
+            if(forceQuit) return showMenu();
+            
+            SFX.gameOver();
+            switchScreen('result');
+            document.getElementById('final-score').innerText = gameState.score;
+            document.getElementById('review-list').innerHTML = gameState.history.map(h => `
+                <li class="flex justify-between items-center p-4 bg-white/5 rounded-2xl border border-white/5">
+                    <span class="${h.correct ? 'text-white' : 'text-slate-500'} font-black text-lg">${h.word}</span>
+                    <span>${h.correct ? '✅' : '❌'}</span>
+                </li>
+            `).join('');
+        }
+
+        function switchScreen(s) {
+            ['menu', 'ready', 'game', 'result'].forEach(id => document.getElementById(id+'-screen').classList.add('hidden'));
+            const active = document.getElementById(s+'-screen');
+            active.classList.remove('hidden');
+            active.classList.add('screen-enter');
+            
+            document.getElementById('tap-left').style.display = s === 'game' ? 'flex' : 'none';
+            document.getElementById('tap-right').style.display = s === 'game' ? 'flex' : 'none';
+        }
+
+        function confirmExit(e) { e.stopPropagation(); gameState.isPaused = true; document.getElementById('confirm-modal').classList.remove('hidden'); }
+        function closeModal() { gameState.isPaused = false; document.getElementById('confirm-modal').classList.add('hidden'); }
+        function showMenu() { switchScreen('menu'); }
+
+        window.onload = initMenu;
+    </script>
 </body>
 </html>
