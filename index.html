@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>你演我猜 - 專業聚會極致版</title>
+    <title>你演我猜 - 專業聚會版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
@@ -15,10 +15,9 @@
             overflow: hidden;
             -webkit-user-select: none;
             user-select: none;
-            color: white;
         }
 
-        /* Gradient Themes */
+        /* 漸層背景定義 */
         .bg-anime { background: linear-gradient(135deg, #f43f5e, #fb923c); }
         .bg-tech { background: linear-gradient(135deg, #3b82f6, #2dd4bf); }
         .bg-life { background: linear-gradient(135deg, #8b5cf6, #ec4899); }
@@ -33,12 +32,18 @@
         .bg-history { background: linear-gradient(135deg, #475569, #1e293b); }
         .bg-events2025 { background: linear-gradient(135deg, #ef4444, #f97316); }
 
-        /* Animations */
+        /* 動畫效果 */
         .intro-logo { animation: introLogoFade 1.8s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
         @keyframes introLogoFade {
             0% { opacity: 0; transform: scale(0.85); filter: blur(20px); }
             40% { opacity: 1; transform: scale(1.05); filter: blur(0px); }
             100% { opacity: 1; transform: scale(1); filter: blur(0px); }
+        }
+
+        .intro-container { animation: introContainerSlide 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both; }
+        @keyframes introContainerSlide {
+            0% { opacity: 0; transform: translateY(60px) rotateX(-15deg); }
+            100% { opacity: 1; transform: translateY(0) rotateX(0deg); }
         }
 
         .screen-enter { animation: fadeInBlur 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
@@ -83,15 +88,15 @@
         .btn-press:active { transform: scale(0.95); transition: transform 0.1s; }
 
         .version-tag {
-            position: absolute; bottom: 1rem; right: 1.5rem;
+            position: absolute; bottom: 1.5rem; right: 2rem;
             font-size: 10px; font-weight: 900; color: rgba(255, 255, 255, 0.1);
             letter-spacing: 0.1em; pointer-events: none;
         }
     </style>
 </head>
-<body class="min-h-screen flex flex-col items-center justify-center p-4">
+<body class="text-white min-h-screen flex flex-col items-center justify-center p-4">
 
-    <!-- Gameplay Interaction Zones -->
+    <!-- 操作感應區 -->
     <div id="tap-left" onclick="handleAction(false)" class="tap-zone tap-zone-left">
         <span class="hint-text font-black text-2xl tracking-[1em] opacity-30 text-red-100">PASS 跳過</span>
     </div>
@@ -99,38 +104,40 @@
         <span class="hint-text font-black text-2xl tracking-[1em] opacity-30 text-green-100">NEXT 正確</span>
     </div>
 
-    <!-- Main Container -->
-    <div id="app" class="w-full max-w-2xl bg-slate-900/80 backdrop-blur-3xl rounded-[3rem] shadow-2xl overflow-hidden border border-white/10 relative z-10" style="perspective: 1000px;">
+    <!-- 主容器 -->
+    <div id="app" class="w-full max-w-2xl bg-slate-900/80 backdrop-blur-3xl rounded-[3rem] shadow-2xl overflow-hidden border border-white/10 relative z-10 intro-container" style="perspective: 1000px;">
         
-        <!-- 1. Menu Screen -->
+        <!-- 1. 菜單畫面 -->
         <div id="menu-screen" class="p-6 md:p-10 space-y-6 screen-enter pb-14 stagger-active">
             <div class="text-center py-4 intro-logo">
                 <h1 class="text-5xl md:text-6xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-b from-white to-slate-500">你演我猜</h1>
                 <p class="text-slate-500 font-bold tracking-widest text-[10px] uppercase mt-2">Ultimate Party Experience</p>
             </div>
 
+            <!-- 類別卡片列表 -->
             <div class="grid grid-cols-2 gap-4 max-h-[45vh] overflow-y-auto pr-2 custom-scrollbar" id="category-list"></div>
 
+            <!-- 設置區 -->
             <div class="pt-6 border-t border-white/5 stagger-item" style="animation-delay: 0.5s;">
                 <div class="flex justify-between items-center mb-4">
-                    <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest">時間設定</label>
+                    <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest">倒數時間設定</label>
                     <span id="time-label" class="bg-indigo-500/20 text-indigo-400 px-3 py-1 rounded-full font-black text-sm">60s</span>
                 </div>
                 <input type="range" id="time-slider" min="30" max="180" step="30" value="60" 
                     class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-400">
             </div>
             
-            <div class="version-tag">STABLE BUILD | V2.0.1</div>
+            <div class="version-tag">TOTAL 1100 WORDS | V1.7.0</div>
         </div>
 
-        <!-- 2. Ready Screen -->
+        <!-- 2. 準備畫面 -->
         <div id="ready-screen" class="hidden p-8 text-center flex flex-col items-center justify-center min-h-[450px] screen-enter">
             <h2 class="text-2xl font-black mb-4 text-indigo-400 tracking-[0.3em] uppercase" id="ready-category">類別</h2>
             <div id="countdown-number" class="text-[12rem] font-black text-white drop-shadow-2xl">3</div>
             <p class="mt-4 text-slate-400 font-bold animate-pulse text-lg">READY...</p>
         </div>
 
-        <!-- 3. Game Screen -->
+        <!-- 3. 遊戲畫面 -->
         <div id="game-screen" class="hidden flex flex-col min-h-[500px] screen-enter relative">
             <div class="p-8 flex justify-between items-center shrink-0">
                 <div class="flex items-center gap-3 bg-white/5 p-2 pr-6 rounded-full border border-white/5 backdrop-blur-md">
@@ -151,7 +158,7 @@
             </div>
         </div>
 
-        <!-- 4. Result Screen -->
+        <!-- 4. 結果畫面 -->
         <div id="result-screen" class="hidden p-8 md:p-10 screen-enter pb-16">
             <div class="text-center mb-8">
                 <p class="text-slate-500 font-black uppercase tracking-[0.4em] text-sm">最後得分</p>
@@ -169,8 +176,8 @@
         </div>
     </div>
 
-    <!-- Exit Confirmation Modal -->
-    <div id="confirm-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-xl hidden flex items-center justify-center p-6 z-[1000]">
+    <!-- 確認 Modal -->
+    <div id="confirm-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-xl hidden flex items-center justify-center p-6 z-[1000] screen-enter">
         <div class="bg-slate-900 border border-white/10 rounded-[3rem] p-10 max-w-sm w-full text-center shadow-2xl">
             <h3 class="text-2xl font-black mb-8">確定要提早結束嗎？</h3>
             <div class="flex flex-col gap-4">
@@ -183,109 +190,173 @@
     <script>
         const categoryData = [
             { 
-                id: "events2025", name: "2025時事", type: "趨勢", bg: "bg-events2025", 
-                words: ["川普就任", "世界壯年運動會", "大阪萬博", "台積電2奈米", "AI機器人", "黃仁勳", "6G技術", "碳費開徵", "大巨蛋演唱會", "星艦試飛", "虛擬偶像", "低軌衛星", "日圓波動", "無人機外送", "台北捷運東延"] 
+                id: "events2025", name: "2025年度大事", type: "時事", bg: "bg-events2025", 
+                words: [
+                    "川普就任美國總統", "大語言模型推理突破", "2025世界壯年運動會", "台灣碳費正式開徵", "台北捷運信義線東延段", "世界博覽會大阪萬博", "AI 機器人普及化", "生成式影片大爆發", "火星登陸計劃推進", "極端氣候熱浪", "低軌衛星全球覆蓋", "台積電2奈米量產", "台灣高鐵南延屏東動工", "黃仁勳來台演講", "元宇宙社交再現", "數位貨幣全面合規", "量子電腦商業應用", "台灣基本工資調漲", "星艦第五次試飛成功", "日圓匯率劇烈波動", "全球半導體競爭", "2025 NBA 總決賽", "大巨蛋演唱會熱潮", "台灣交通新制上路", "無人機外送服務", "巴黎協定氣候目標審視", "東南亞旅遊熱潮", "台灣 6G 技術實驗"
+                ] 
+            },
+            { 
+                id: "2000s", name: "2000年金曲", type: "經典", bg: "bg-2000s", 
+                words: [
+                    "龍捲風", "可愛女人", "雙截棍", "簡單愛", "開不了口", "安靜", "回到過去", "半島鐵盒", "晴天", "七里香", "看我72變", "說愛你", "倒帶", "布拉格廣場", "愛情三十六計", "天黑黑", "開始懂了", "風箏", "我不難過", "綠光", "戀人未滿", "美麗新世界", "Super Star", "波斯貓", "江南", "豆漿油條", "一千年以後", "曹操", "溫柔", "憨人", "終結孤單", "人生海海", "倔強", "戀愛ing", "十年", "K歌之王", "你的背包", "勇氣", "分手快樂", "寧夏", "曖昧", "雨後曙光", "倒數", "愛如潮水", "暗號", "以父之名", "布拉格廣場", "東風破", "聽媽媽的話", "千里之外", "說好的幸福呢", "那女孩對我說", "童話", "第一次", "約定", "遺失的美好", "歐若拉", "隱形的翅膀", "不想長大", "中國話", "暗示", "那些年", "小幸運", "知足", "垃圾車", "私奔到月球", "突然好想你"
+                ] 
+            },
+            { 
+                id: "history", name: "歷史大事件", type: "歷史", bg: "bg-history", 
+                words: [
+                    "秦始皇統一六國", "大航海時代", "工業革命", "法國大革命", "第一次世界大戰", "第二次世界大戰", "登陸月球", "鐵達尼號沉沒", "冷戰結束", "柏林圍牆倒塌", "文藝復興", "黑死病爆發", "美國獨立戰爭", "諾曼第登陸", "珍珠港事件", "廣島投下原子彈", "馬丁路德宗教改革", "玄武門之變", "安史之亂", "十字軍東征", "蒙古西征", "哥倫布發現新大陸", "九一一事件", "武昌起義", "赤壁之戰", "三國鼎立", "貞觀之治", "萬里長城動工", "英法百年戰爭", "滑鐵盧之役", "蘇聯解體", "發明網際網路", "第一次工業革命", "發明電燈", "萊特兄弟飛機首航", "大蕭條", "馬雅文明消失", "古羅馬城建立", "亞歷山大東征", "金字塔建造"
+                ] 
+            },
+            { 
+                id: "lyrics", name: "經典歌詞", type: "歌詞", bg: "bg-lyrics", 
+                words: [
+                    "我想帶你去浪漫的土耳其", "陪你去看流星雨落在這地球上", "只要你一個眼神肯定我的愛", "簡單點說話的方式簡單點", "你說你公私分明卻又私下關心", "往事不要再提人生已多風雨", "給我一首歌的時間", "我來到你的城市走過你來時的路", "原來你什麼都不想要", "如果這都不算愛", "親愛的愛上你從那天起", "手牽手一步兩步三步四步望著天", "快使用雙截棍哼哼哈係", "聽媽媽的話別讓她受傷", "天黑黑欲落雨", "你存在我深深的腦海裡", "我的心太亂要一些空白", "那些年錯過的大雨", "刻在我心底的名字", "醜八怪呀呀呀", "如果可以我想和你回到那天", "一場遊戲一場夢", "我難過的是放棄你放棄愛", "聽見下雨的聲音", "說好不哭", "可惜不是你陪我到最後", "你要的愛不只是依賴", "對不起這條路我走不到終點", "我們背對背擁抱", "給我一個理由忘記"
+                ] 
+            },
+            { 
+                id: "music", name: "華語金典", type: "影音", bg: "bg-music", 
+                words: [
+                    "七里香", "聽媽媽的話", "告白氣球", "修煉愛情", "年少有為", "小幸運", "那些年", "刻在我心底的名字", "如果可以", "有一種悲傷",
+                    "紅豆", "我願意", "聽海", "我懷念的", "可惜不是你", "情非得已", "明明就", "曹操", "江南", "愛我別走",
+                    "十年", "浮誇", "K歌之王", "簡單愛", "稻香", "挪威的森林", "浪人情歌", "愛如潮水", "吻別", "一場遊戲一場夢",
+                    "童話", "勇氣", "演員", "曖昧", "家後", "海闊天空", "光輝歲月", "三天三夜", "姐妹", "BAD BOY",
+                    "志明與春嬌", "離開地球表面", "突然好想你", "派對動物", "聽見下雨的聲音", "說散就散", "後來", "盛夏光年", "逆光", "小情歌",
+                    "你就不要想起我", "魔鬼中的天使", "體面", "涼涼", "千里之外", "青花瓷", "雙截棍", "牛仔很忙", "屋頂", "煙花易冷",
+                    "愛情轉移", "洋蔥", "泡沫", "孤勇者", "想見你想見你想見你", "魚仔", "浪子回頭", "倒帶", "說好的幸福呢", "安靜"
+                ] 
+            },
+            { 
+                id: "school", name: "校園生活", type: "校園", bg: "bg-school", 
+                words: [
+                    "粉筆", "黑板擦", "自動鉛筆", "立可帶", "圓規", "量角器", "書包", "福利社", "升旗", "大隊接力", 
+                    "躲避球", "校車", "升學考試", "作業本", "顯微鏡", "燒杯", "地球儀", "鋼琴", "直笛", "單槓", 
+                    "體育館", "圖書館", "校長室", "健康中心", "教官", "風紀股長", "打掃時間", "午休", "營養午餐", "英文單字", 
+                    "九九乘法表", "聯絡簿", "交換日記", "作弊", "遲到", "罰站", "小考", "畢業旅行", "園遊會", "運動會",
+                    "班會", "導師", "訓導主任", "輔導室", "獎狀", "警告", "記功", "補習班", "模擬考", "學號",
+                    "制服", "運動服", "百褶裙", "運動鞋", "三角板", "字典", "墊板", "修正液", "釘書機", "美勞課",
+                    "音樂教室", "理化實驗室", "電腦課", "排球場", "司令台", "公布欄", "垃圾桶", "蒸便當箱", "值日生", "放學"
+                ] 
+            },
+            { 
+                id: "home", name: "甜蜜的家", type: "居家", bg: "bg-home", 
+                words: [
+                    "吸塵器", "微波爐", "大同電鍋", "烤麵包機", "咖啡機", "洗衣機", "烘衣機", "除濕機", "空氣清淨機", "吹風機", 
+                    "延長線", "插座", "垃圾桶", "沙發", "餐桌", "衣櫃", "化妝鏡", "梳子", "牙膏", "肥皂", 
+                    "浴巾", "地毯", "拖鞋", "睡衣", "枕頭", "棉被", "窗簾", "衣架", "曬衣繩", "洗碗精", 
+                    "保鮮盒", "開罐器", "剪刀", "膠水", "膠帶", "指甲剪", "溫度計", "手電筒", "雨傘", "鑰匙", 
+                    "遙控器", "冰箱", "洗髮精", "沐浴乳", "掃把", "拖把", "除塵紙", "針線盒", "醫藥箱", "體重計",
+                    "洗碗機", "氣炸鍋", "瓦斯爐", "抽油煙機", "蓮蓬頭", "馬桶", "洗手台", "浴缸", "玄關", "陽台",
+                    "玄關墊", "鞋櫃", "儲藏室", "書桌", "檯燈", "延長線", "電扇", "冷氣遙控器", "熨斗", "燙衣板"
+                ] 
+            },
+            { 
+                id: "countries", name: "國家地區", type: "地理", bg: "bg-world", 
+                words: [
+                    "台灣", "日本", "韓國", "泰國", "美國", "英國", "法國", "德國", "義大利", "澳洲", "加拿大", "巴西", "埃及", "俄羅斯", "瑞士", "荷蘭", "西班牙", "希臘", "土耳其", "越南", "馬來西亞", "新加坡", "印度", "紐西蘭", "墨西哥", "挪威", "瑞典", "冰島", "波蘭", "葡萄牙", "愛爾蘭", "比利時", "丹麥", "芬蘭", "奧地利", "阿根廷", "智利", "秘魯", "南非", "肯亞", "摩洛哥", "以色列", "沙烏地阿拉伯", "伊朗", "捷克", "匈牙利", "菲律賓", "印度尼西亞", "巴基斯坦", "烏克蘭", "古巴", "牙買加", "梵蒂岡", "摩納哥", "盧森堡", "蒙古", "尼泊爾", "斯里蘭卡", "不丹", "柬埔寨", "寮國", "緬甸", "卡達", "科威特", "阿聯酋", "伊拉克", "北韓", "阿富汗", "巴拿馬", "哥倫比亞"
+                ] 
+            },
+            { 
+                id: "cities", name: "世界城市", type: "地理", bg: "bg-nature", 
+                words: [
+                    "台北", "東京", "大阪", "首爾", "曼谷", "紐約", "倫敦", "巴黎", "柏林", "羅馬", "雪梨", "洛杉磯", "舊金山", "芝加哥", "多倫多", "溫哥華", "開羅", "伊斯坦堡", "莫斯科", "香港", "澳門", "上海", "北京", "迪拜", "阿姆斯特丹", "維也納", "蘇黎世", "馬德里", "威尼斯", "米蘭", "佛羅倫斯", "布拉格", "布達佩斯", "華沙", "里斯本", "哥本哈根", "斯德哥爾摩", "奧斯陸", "赫爾辛基", "都柏林", "布魯塞爾", "雅典", "巴塞隆納", "里約熱內盧", "聖保羅", "布宜諾斯艾利斯", "墨西哥城", "開普敦", "內羅比", "德里", "孟買", "新加坡市", "吉隆坡", "雅加達", "馬尼拉", "胡志明市", "河內", "暹粒", "京都", "福岡", "名古屋", "釜山", "濟州島", "坎培拉", "墨爾本", "奧克蘭", "威靈頓", "西雅圖", "波士頓", "邁阿密"
+                ] 
+            },
+            { 
+                id: "celebs", name: "社會名人", type: "社會", bg: "bg-celebs", 
+                words: [
+                    "周杰倫", "蔡依林", "馬斯克", "賈伯斯", "比爾蓋茲", "川普", "歐巴馬", "愛因斯坦", "牛頓", "貝多芬", "莫札特", "畢卡索", "達文西", "泰勒絲", "梅西", "C羅", "大谷翔平", "李小龍", "成龍", "周星馳", "劉德華", "黃仁勳", "戴資穎", "王建民", "陳金鋒", "曾雅妮", "李安", "五月天阿信", "林俊傑", "鄧紫棋", "宮崎駿", "史蒂芬史匹柏", "瑪丹娜", "麥可傑克森", "李奧納多", "湯姆克魯斯", "安潔莉娜裘莉", "歐普拉", "切格瓦拉", "甘地", "馬丁路德金", "居禮夫人", "愛迪生", "貝爾", "萊特兄弟", "馬克吐溫", "莎士比亞", "海明威", "村上春樹", "J.K.羅琳", "費德勒", "納達爾", "柯瑞", "詹姆斯", "喬丹", "伍茲", "舒馬赫", "阿姆斯壯", "哥倫布", "麥哲倫", "拿破崙", "凱撒大帝", "亞歷山大", "林肯", "邱吉爾", "羅斯福", "柴徹爾夫人", "曼德拉", "德蕾莎修女", "孔子"
+                ] 
             },
             { 
                 id: "anime", name: "動漫神作", type: "影視", bg: "bg-anime", 
-                words: ["航海王", "進擊的巨人", "鬼滅之刃", "咒術迴戰", "間諜家家酒", "葬送的芙莉蓮", "排球少年", "灌籃高手", "鏈鋸人", "我推的孩子", "藥師少女", "神隱少女", "七龍珠", "獵人", "鋼之鍊金術師"] 
+                words: [
+                    "航海王", "火影忍者", "名偵探柯南", "進擊的巨人", "鬼滅之刃", "咒術迴戰", "間擲家家酒", "蠟筆小新", "多啦A夢", "櫻桃小丸子", "七龍珠", "排球少年", "灌籃高手", "葬送的芙莉蓮", "我的英雄學院", "鏈鋸人", "黑執事", "美少女戰士", "新世紀福音戰士", "神隱少女", "龍貓", "天空之城", "魔法公主", "霍爾的移動城堡", "紅豬", "風之谷", "幽遊白書", "獵人", "死神 BLEACH", "銀魂", "鋼之鍊金術師", "死亡筆記本", "JoJo的奇妙冒險", "一拳超人", "路人超能100", "藍色監獄", "我推的孩子", "藥師少女的獨語", "迷宮飯", "怪獸8號", "數碼寶貝", "神奇寶貝", "遊戲王", "棋靈王", "網球王子", "黑子的籃球", "飆速宅男", "北斗神拳", "聖鬥士星矢", "城市獵人", "魯邦三世", "機動戰士鋼彈", "超時空要塞", "涼宮春日的憂鬱", "幸運星", "K-ON!輕音部", "魔法少女小圓", "刀劍神域", "Re:從零開始的異世界生活", "關於我轉生變成史萊姆這檔事", "無職轉生", "東京喰種", "寄生獸", "命運石之門", "果然我的青春戀愛喜劇搞錯了", "暗殺教室", "食戟之靈", "工作細胞", "孤獨搖滾!"
+                ] 
             },
             { 
-                id: "tech", name: "科技品牌", type: "生活", bg: "bg-tech", 
-                words: ["Apple", "特斯拉", "ChatGPT", "Netflix", "TikTok", "輝達 NVIDIA", "星巴克", "YouTube", "任天堂", "Uber Eats", "Google", "Instagram", "IKEA", "蝦皮購物", "Spotify"] 
+                id: "movie", name: "經典電影", type: "影視", bg: "bg-anime", 
+                words: [
+                    "鐵達尼號", "阿凡達", "哈利波特", "復仇者聯盟", "玩命關頭", "獅子王", "冰雪奇緣", "小丑", "奧本海默", "芭比", "捍衛戰士", "寄生上流", "教父", "侏羅紀公園", "星際大戰", "不可能的任務", "駭客任務", "蜘蛛人", "蝙蝠俠", "超人", "神力女超人", "黑豹", "沙丘", "星際效應", "全面啟動", "黑暗騎士", "魔戒", "哈比人", "辛德勒的名單", "刺激1995", "阿甘正傳", "搶救雷恩大兵", "大白鯊", "外星人E.T.", "法櫃奇兵", "回到未來", "魔鬼終結者", "異形", "終極警探", "捍衛任務", "神鬼認證", "神鬼奇航", "神鬼戰士", "惡靈古堡", "沈默的羔羊", "火線追緝令", "頂尖對決", "記憶拼圖", "敦克爾克大行動", "樂來越愛你", "大娛樂家", "一個巨星的誕生", "波希米亞狂想曲", "穿著Prada的惡魔", "麻雀變鳳凰", "我就要你好好的", "生命中的美好缺憾", "真愛每一天", "戀夏500日", "手札情緣", "鬼店", "大法師", "厲陰宅", "安娜貝爾", "牠", "噤界"
+                ] 
             },
             { 
-                id: "food", name: "好吃好喝", type: "美食", bg: "bg-life", 
-                words: ["珍珠奶茶", "臭豆腐", "蚵仔煎", "地瓜球", "鹽酥雞", "小籠包", "牛肉麵", "麻辣火鍋", "芒果冰", "滷肉飯", "鳳梨酥", "提拉米蘇", "壽司", "披薩", "韓式炸雞"] 
+                id: "tech", name: "品牌科技", type: "生活", bg: "bg-tech", 
+                words: [
+                    "蘋果 Apple", "Google", "特斯拉", "星巴克", "麥當勞", "Netflix", "Facebook", "Instagram", "TikTok", "任天堂", "PlayStation", "微軟", "亞馬遜", "蝦皮購物", "Uber Eats", "台積電", "ChatGPT", "輝達 NVIDIA", "YouTube", "迪士尼", "可口可樂", "百事可樂", "耐吉 Nike", "愛迪達 Adidas", "香奈兒", "路易威登 LV", "古馳 Gucci", "愛馬仕", "勞力士", "三星 Samsung", "索尼 Sony", "松下 Panasonic", "戴森 Dyson", "IKEA", "好市多 Costco", "全聯", "7-Eleven", "全家", "星宇航空", "長榮航空", "華航", "高鐵", "捷運", "Uber", "Airbnb", "Spotify", "Zoom", "Slack", "PayPal", "比特幣", "Visa", "Mastercard", "捷安特", "迪卡儂", "優衣庫 Uniqlo", "無印良品", "Zara", "H&M", "歐舒丹", "雅詩蘭黛", "資生堂", "SK-II", "戴爾 Dell", "惠普 HP", "華碩 ASUS", "宏碁 Acer", "聯想", "小米", "華為", "比亞迪"
+                ] 
             },
             { 
-                id: "idioms", name: "成語大師", type: "硬核", bg: "bg-world", 
-                words: ["守株待兔", "畫蛇添足", "盲人摸象", "對牛彈琴", "掩耳盜鈴", "一箭雙鵰", "井底之蛙", "狐假虎威", "順手牽羊", "胸有成竹", "名落孫山", "草木皆兵", "三顧茅廬", "草船借箭", "指鹿為馬"] 
+                id: "food", name: "好吃好喝", type: "生活", bg: "bg-life", 
+                words: [
+                    "珍珠奶茶", "臭豆腐", "大腸包小腸", "蚵仔煎", "地瓜球", "蚵仔麵線", "鹽酥雞", "木瓜牛奶", "章魚小丸子", "糖葫蘆", "雞排", "胡椒餅", "東山鴨頭", "牛肉麵", "滷肉飯", "小籠包", "雞肉飯", "肉圓", "碗粿", "拉麵", "壽司", "生魚片", "披薩", "漢堡", "薯條", "炸雞", "牛排", "義大利麵", "燉飯", "麻辣火鍋", "羊肉爐", "薑母鴨", "佛跳牆", "刈包", "車輪餅", "紅豆餅", "燒仙草", "刨冰", "芒果冰", "豆花", "愛玉", "仙草凍", "鳳梨酥", "太陽餅", "牛軋糖", "提拉米蘇", "起司蛋糕", "馬卡龍", "甜甜圈", "可頌", "三明治", "蛋餅", "飯糰", "燒餅油條", "鹹豆漿", "鐵板燒", "韓式炸雞", "石鍋拌飯", "部隊鍋", "泰式奶茶", "打拋豬", "月亮蝦餅", "越南河粉", "咖哩飯", "豬排飯", "丼飯", "天婦羅", "關東煮", "可樂餅", "宇治抹茶"
+                ] 
             },
             { 
-                id: "actions", name: "爆笑動作", type: "表演", bg: "bg-celebs", 
-                words: ["洗澡跳舞", "踩到大便", "擠痘痘", "挖鼻孔", "喝酸檸檬", "遇到前任", "猩猩求偶", "超模走秀", "用腳開門", "穿太緊的褲子", "機器人", "拉肚子找廁所", "假裝是樹", "雨中跌倒", "模仿公雞"] 
+                id: "idioms", name: "成語大師", type: "硬核", bg: "bg-life", 
+                words: [
+                    "守株待兔", "畫蛇添足", "盲人摸象", "對牛彈琴", "掩耳盜鈴", "拔苗助長", "一箭雙鵰", "井底之蛙", "亡羊補牢", "狐假虎威", "順手牽羊", "雞飛狗跳", "如魚得水", "驚弓之鳥", "走馬看花", "聞雞起舞", "懸樑刺股", "胸有成竹", "名落孫山", "草木皆兵", "破釜沉舟", "背水一戰", "臥薪嘗膽", "完璧歸趙", "負荊請罪", "三顧茅廬", "草船借箭", "指鹿為馬", "四面楚歌", "老馬識途", "班門弄斧", "杯弓蛇影", "如坐針氈", "望梅止渴", "口若懸河", "拋磚引玉", "青梅竹馬", "兩小無猜", "天長地久", "海枯石爛", "一心一意", "三心二意", "五花八門", "七上八下", "九死一生", "十全十美", "百發百中", "千載難逢", "萬無一失", "名不虛傳", "自相矛盾", "杞人憂天", "塞翁失馬", "掩鼻而過", "畫龍點睛", "畫餅充飢", "螳臂擋車", "螳螂捕蟬", "黃雀在後", "老當益壯", "投筆從戎", "刮目看相", "吳下阿蒙", "望其項背", "名列前茅", "一鳴驚人", "一落千丈", "一石二鳥", "一勞永逸", "一見鍾情"
+                ] 
             },
             { 
-                id: "2000s", name: "2000s金曲", type: "音樂", bg: "bg-2000s", 
-                words: ["龍捲風", "七里香", "戀人未滿", "Super Star", "倒帶", "天黑黑", "江南", "十年", "勇氣", "分手快樂", "童話", "小幸運", "那些年", "知足", "倔強"] 
-            },
-            { 
-                id: "city", name: "旅遊聖地", type: "地理", bg: "bg-nature", 
-                words: ["台北", "東京", "巴黎", "倫敦", "紐約", "首爾", "曼谷", "雪梨", "羅馬", "威尼斯", "京都", "大阪", "香港", "迪拜", "新加坡"] 
+                id: "actions", name: "爆笑動作", type: "生活", bg: "bg-tech", 
+                words: [
+                    "跳舞洗澡", "公車放屁", "遇到前任假裝沒看見", "用腳開門", "擠痘痘", "挖鼻孔", "喝酸檸檬汁", "踩到大便", "忘記帶錢包", "圖書館噴嚏", "被鬼嚇到", "健身房裝酷", "化妝畫壞", "睡覺流口水", "試圖飛起來", "假裝是樹", "雨中跌倒", "猩猩求偶", "電梯偷放屁", "超模走秀", "假裝打瞌睡", "偷看別人手機", "自拍抓角度", "跑步撞到電線桿", "吃辣被燙到", "模仿公雞叫", "假裝正在錄影", "在冰上走路", "穿太緊的褲子", "被蚊子咬癢死", "假裝在游泳", "試圖抓自己的背", "假裝在攀岩", "模仿螃蟹走路", "喝醉酒走路", "試圖穿針線", "假裝在指揮交響樂", "模仿機器人", "假裝在舉重", "試圖吹泡泡糖", "假裝在打地鼠", "模仿殭屍", "假裝在騎馬", "試圖平衡雨傘", "假裝在烤肉", "模仿貓咪洗臉", "假裝在釣魚", "試圖抓蝴蝶", "假裝在刷牙", "模仿蛇爬行", "假裝在剪頭髮", "試圖躲避雷射光", "假裝在彈吉他", "模仿芭蕾舞", "假裝在敲門", "試圖保持平衡", "假裝在洗碗", "模仿鴕鳥躲藏", "假裝在滑雪", "試圖打開很燙的鍋蓋", "假裝在挖地洞", "模仿松鼠藏堅果", "假裝在塗指甲油", "試圖安撫嬰兒", "假裝在打蚊子", "模仿兔子跳", "假裝在燙衣服", "試圖拉開黏住的膠帶", "假裝在玩溜溜球", "模仿袋鼠跳"
+                ] 
             }
         ];
 
         let gameState = {
             currentWords: [], score: 0, timeLeft: 60, timer: null,
-            history: [], isPaused: false, audioCtx: null, activeWord: ""
+            history: [], isPaused: false, audioCtx: null
         };
 
         const SFX = {
-            init() { 
-                if (!gameState.audioCtx) {
-                    gameState.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                }
-            },
-            play(freq, type = 'sine', duration = 0.1) {
-                this.init();
-                const now = gameState.audioCtx.currentTime;
-                const osc = gameState.audioCtx.createOscillator();
-                const gain = gameState.audioCtx.createGain();
-                osc.type = type;
-                osc.frequency.setValueAtTime(freq, now);
-                gain.gain.setValueAtTime(0.1, now);
-                gain.gain.exponentialRampToValueAtTime(0.01, now + duration);
-                osc.connect(gain);
-                gain.connect(gameState.audioCtx.destination);
-                osc.start(now);
-                osc.stop(now + duration);
-            },
-            tick() { this.play(880, 'triangle', 0.1); },
-            correct() { this.play(523, 'sine', 0.2); setTimeout(()=>this.play(659, 'sine', 0.2), 50); },
-            pass() { this.play(220, 'sawtooth', 0.2); },
-            gameOver() { [392, 523, 659].forEach((f, i) => setTimeout(() => this.play(f, 'sine', 0.5), i * 150)); }
+            init() { if (!gameState.audioCtx) gameState.audioCtx = new (window.AudioContext || window.webkitAudioContext)(); },
+            tick() { this.init(); const now = gameState.audioCtx.currentTime; const osc = gameState.audioCtx.createOscillator(); const gain = gameState.audioCtx.createGain(); osc.type = 'triangle'; osc.frequency.setValueAtTime(880, now); gain.gain.setValueAtTime(0.2, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1); osc.connect(gain); gain.connect(gameState.audioCtx.destination); osc.start(now); osc.stop(now + 0.1); },
+            correct() { this.init(); const now = gameState.audioCtx.currentTime; [523.25, 659.25, 783.99].forEach((f, i) => { const osc = gameState.audioCtx.createOscillator(); const gain = gameState.audioCtx.createGain(); osc.type = 'sine'; osc.frequency.setValueAtTime(f, now + i*0.05); gain.gain.setValueAtTime(0, now + i*0.05); gain.gain.linearRampToValueAtTime(0.1, now + i*0.05 + 0.05); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4); osc.connect(gain); gain.connect(gameState.audioCtx.destination); osc.start(now + i*0.05); osc.stop(now + 0.4); }); },
+            pass() { this.init(); const now = gameState.audioCtx.currentTime; const osc = gameState.audioCtx.createOscillator(); const gain = gameState.audioCtx.createGain(); osc.type = 'sawtooth'; osc.frequency.setValueAtTime(220, now); osc.frequency.exponentialRampToValueAtTime(110, now + 0.2); gain.gain.setValueAtTime(0.1, now); gain.gain.linearRampToValueAtTime(0, now + 0.2); osc.connect(gain); gain.connect(gameState.audioCtx.destination); osc.start(now); osc.stop(now + 0.2); },
+            start() { this.init(); const now = gameState.audioCtx.currentTime; [261.63, 329.63, 392, 523.25].forEach((f, i) => { const osc = gameState.audioCtx.createOscillator(); const gain = gameState.audioCtx.createGain(); osc.type = 'sine'; osc.frequency.setValueAtTime(f, now + i*0.1); gain.gain.setValueAtTime(0.1, now + i*0.1); gain.gain.exponentialRampToValueAtTime(0.01, now + i*0.1 + 0.3); osc.connect(gain); gain.connect(gameState.audioCtx.destination); osc.start(now + i*0.1); osc.stop(now + i*0.1 + 0.3); }); },
+            gameOver() { this.init(); const now = gameState.audioCtx.currentTime; [392, 523.25, 659.25].forEach(f => { const osc = gameState.audioCtx.createOscillator(); const gain = gameState.audioCtx.createGain(); osc.type = 'triangle'; osc.frequency.setValueAtTime(f, now); gain.gain.setValueAtTime(0, now); gain.gain.linearRampToValueAtTime(0.1, now + 0.1); gain.gain.exponentialRampToValueAtTime(0.001, now + 1.5); osc.connect(gain); gain.connect(gameState.audioCtx.destination); osc.start(now); osc.stop(now + 1.5); }); }
         };
 
         function initMenu() {
-            const list = document.getElementById('category-list');
-            categoryData.forEach((cat, idx) => {
-                const card = document.createElement('div');
-                card.className = `${cat.bg} p-6 rounded-[2rem] cursor-pointer hover:scale-[1.03] transition-all active:scale-95 shadow-xl border-b-4 border-black/20 stagger-item`;
-                card.style.animationDelay = `${(idx * 0.05) + 0.3}s`;
-                card.innerHTML = `<div class="font-black text-xl mb-1">${cat.name}</div><div class="text-[10px] opacity-80 font-black tracking-widest uppercase">${cat.type} | ${cat.words.length}題</div>`;
-                card.onclick = () => prepareGame(cat);
-                list.appendChild(card);
-            });
-            
+            renderList();
             const slider = document.getElementById('time-slider');
             const label = document.getElementById('time-label');
             slider.oninput = () => label.innerText = slider.value + 's';
+            setTimeout(() => { document.body.style.background = "#0f172a"; document.body.style.transition = "background 2s ease"; }, 100);
+        }
+
+        function renderList() {
+            const list = document.getElementById('category-list');
+            list.innerHTML = '';
+            categoryData.forEach((cat, index) => {
+                const btn = document.createElement('div');
+                btn.className = `${cat.bg} p-6 rounded-[2rem] cursor-pointer hover:scale-[1.03] transition-all active:scale-95 shadow-xl border-b-4 border-black/20 stagger-item`;
+                btn.style.animationDelay = `${(index * 0.05) + 0.3}s`;
+                btn.innerHTML = `<div class="font-black text-xl mb-1">${cat.name}</div><div class="text-[10px] opacity-80 font-black uppercase tracking-widest">${cat.type} | ${cat.words.length} 題</div>`;
+                btn.onclick = () => prepareGame(cat);
+                list.appendChild(btn);
+            });
+            const menu = document.getElementById('menu-screen');
+            menu.classList.remove('stagger-active');
+            void menu.offsetWidth;
+            menu.classList.add('stagger-active');
         }
 
         function prepareGame(cat) {
-            gameState.score = 0;
-            gameState.history = [];
+            gameState.score = 0; gameState.history = [];
             gameState.timeLeft = parseInt(document.getElementById('time-slider').value);
             gameState.currentWords = [...cat.words].sort(() => Math.random() - 0.5);
             document.getElementById('ready-category').innerText = cat.name;
             switchScreen('ready');
-            
             let count = 3;
             const countEl = document.getElementById('countdown-number');
             countEl.innerText = count;
             const cd = setInterval(() => {
                 count--;
-                if(count > 0) {
-                    countEl.innerText = count;
-                    SFX.tick();
-                    countEl.style.animation = 'none';
-                    void countEl.offsetWidth;
-                    countEl.style.animation = 'wordPop 0.5s ease-out';
-                } else {
-                    clearInterval(cd);
-                    startGame();
-                }
+                if(count > 0) { countEl.innerText = count; SFX.tick(); countEl.style.animation = 'none'; void countEl.offsetWidth; countEl.style.animation = 'wordPop 0.5s ease-out'; }
+                else { clearInterval(cd); SFX.start(); startGame(); }
             }, 1000);
         }
 
@@ -308,7 +379,7 @@
             const display = document.getElementById('word-display');
             display.classList.remove('word-bounce');
             void display.offsetWidth;
-            const word = gameState.currentWords.pop() || "題庫已空！";
+            const word = gameState.currentWords.pop() || "題庫已空!";
             display.innerText = word;
             gameState.activeWord = word;
             display.classList.add('word-bounce');
@@ -317,51 +388,53 @@
         function handleAction(isCorrect) {
             if(gameState.isPaused || document.getElementById('game-screen').classList.contains('hidden')) return;
             gameState.history.push({ word: gameState.activeWord, correct: isCorrect });
+            const scoreEl = document.getElementById('current-score');
             if(isCorrect) {
-                gameState.score++;
-                SFX.correct();
+                gameState.score++; SFX.correct();
                 document.body.classList.add('correct-flash');
-                document.getElementById('current-score').classList.add('score-pop');
-                setTimeout(() => {
-                    document.body.classList.remove('correct-flash');
-                    document.getElementById('current-score').classList.remove('score-pop');
-                }, 400);
+                scoreEl.classList.add('score-pop');
+                setTimeout(() => { document.body.classList.remove('correct-flash'); scoreEl.classList.remove('score-pop'); }, 400);
             } else {
-                SFX.pass();
-                document.body.classList.add('pass-flash');
+                SFX.pass(); document.body.classList.add('pass-flash');
                 setTimeout(() => document.body.classList.remove('pass-flash'), 400);
             }
-            document.getElementById('current-score').innerText = gameState.score;
+            scoreEl.innerText = gameState.score;
             nextWord();
         }
 
         function endGame(forceQuit = false) {
-            clearInterval(gameState.timer);
-            closeModal();
-            if(forceQuit) return showMenu();
-            
-            SFX.gameOver();
-            switchScreen('result');
-            document.getElementById('final-score').innerText = gameState.score;
-            document.getElementById('review-list').innerHTML = gameState.history.map(h => `
-                <li class="flex justify-between items-center p-4 bg-white/5 rounded-2xl border border-white/5">
-                    <span class="${h.correct ? 'text-white' : 'text-slate-500'} font-black text-lg">${h.word}</span>
-                    <span>${h.correct ? '✅' : '❌'}</span>
-                </li>
-            `).join('');
+            clearInterval(gameState.timer); closeModal(); 
+            if (forceQuit) { showMenu(); }
+            else {
+                SFX.gameOver(); switchScreen('result');
+                document.getElementById('final-score').innerText = gameState.score;
+                const comment = gameState.score > 20 ? "簡直是表演天才！" : gameState.score > 10 ? "非常有默契喔！" : "再接再厲，加油！";
+                document.getElementById('result-comment').innerText = comment;
+                document.getElementById('review-list').innerHTML = gameState.history.map((h, i) => `
+                    <li class="flex justify-between items-center p-4 bg-white/5 rounded-2xl border border-white/5 stagger-item" style="animation-delay: ${i * 0.05}s">
+                        <span class="${h.correct ? 'text-white' : 'text-slate-500'} font-black text-lg text-left pr-4">${h.word}</span>
+                        <span class="text-xl shrink-0">${h.correct ? '✅' : '❌'}</span>
+                    </li>
+                `).join('');
+            }
         }
 
         function switchScreen(s) {
-            ['menu', 'ready', 'game', 'result'].forEach(id => document.getElementById(id+'-screen').classList.add('hidden'));
+            ['menu', 'ready', 'game', 'result'].forEach(id => {
+                const el = document.getElementById(id+'-screen');
+                el.classList.add('hidden');
+                el.classList.remove('screen-enter', 'stagger-active');
+            });
             const active = document.getElementById(s+'-screen');
             active.classList.remove('hidden');
-            active.classList.add('screen-enter');
-            
+            void active.offsetWidth;
+            active.classList.add('screen-enter', 'stagger-active');
             document.getElementById('tap-left').style.display = s === 'game' ? 'flex' : 'none';
             document.getElementById('tap-right').style.display = s === 'game' ? 'flex' : 'none';
+            if(s === 'menu') document.getElementById('game-timer').classList.remove('text-red-500', 'animate-pulse');
         }
 
-        function confirmExit(e) { e.stopPropagation(); gameState.isPaused = true; document.getElementById('confirm-modal').classList.remove('hidden'); }
+        function confirmExit(e) { if(e) e.stopPropagation(); gameState.isPaused = true; document.getElementById('confirm-modal').classList.remove('hidden'); }
         function closeModal() { gameState.isPaused = false; document.getElementById('confirm-modal').classList.add('hidden'); }
         function showMenu() { switchScreen('menu'); }
 
